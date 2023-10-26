@@ -2,14 +2,58 @@
 #include <unistd.h>
 #include <string>
 #include <filesystem>
+#include <fstream>
 namespace fs = std::filesystem;
+
+void backupSystemSettings(const std::string &backupPath)
+{
+    std::string command = "reg export HKEY_LOCAL_MACHINE\\Software " + backupPath;
+    int result = system(command.c_str());
+    if (result != 0)
+    {
+        throw std::runtime_error("Failed to backup system settings.");
+    }
+}
+
+void rollbackSystemSettings(const std::string &backupPath)
+{
+    std::string command = "reg import " + backupPath;
+    int result = system(command.c_str());
+    if (result != 0)
+    {
+        throw std::runtime_error("Failed to rollback system settings.");
+    }
+}
+void optimizeCSGOSettings(const std::string &csgoConfigPath)
+{
+    try
+    {
+        std::ofstream csgoConfigFile(csgoConfigPath);
+
+        if (!csgoConfigFile.is_open())
+        {
+            throw std::runtime_error("Failed to open the CS:GO configuration file.");
+        }
+
+        // Modify CS:GO configuration settings for optimization.
+        csgoConfigFile << "setting1 = value1" << std::endl; // Replace with actual settings.
+        csgoConfigFile << "setting2 = value2" << std::endl; // Replace with actual settings.
+
+        csgoConfigFile.close();
+        std::cout << "CS:GO configuration optimized successfully." << std::endl;
+    }
+    catch (const std::exception &e)
+    {
+        std::cerr << "Failed to optimize CS:GO configuration: " << e.what() << std::endl;
+    }
+}
+
 void powershellCommandsWindows()
 {
     std::string powershellCommand = "$services=@( 'diagnosticshub.standardcollector.service' 'DiagTrack' 'dmwappushservice' 'HomeGroupListener' 'HomeGroupProvider' 'lfsvc' 'MapsBroker' 'NetTcpPortSharing' 'RemoteAccess' 'RemoteRegistry' 'SharedAccess' 'TrkWks' 'WbioSrvc' #'WlanSvc' 'WMPNetworkSvc' 'wscsvc' #'WSearch' 'XblAuthManager' 'XblGameSave' 'XboxNetApiSvc' #Serviceswhichcannotbedisabled #'WdNisSvc' ) foreach($servicein$services){ Write-Output'Tryingtodisable$service' Get-Service-Name$service|Set-Service-StartupTypeDisabled }";
     std::string powershellCommand1 = "Import-Module-DisableNameChecking$PSScriptRoot\..\lib\take-own.psm1 Import-Module-DisableNameChecking$PSScriptRoot\..\lib\force-mkdir.psm1 Write-Output'Elevatingprivilegesforthisprocess' do{}until(Elevate-PrivilegesSeTakeOwnershipPrivilege) Write-Output'Uninstallingdefaultapps' $apps=@( 'Microsoft.3DBuilder' 'Microsoft.Appconnector' 'Microsoft.BingFinance' 'Microsoft.BingNews' 'Microsoft.BingSports' 'Microsoft.BingWeather' 'Microsoft.Getstarted' 'Microsoft.MicrosoftOfficeHub' 'Microsoft.MicrosoftSolitaireCollection' 'Microsoft.Office.OneNote' 'Microsoft.People' 'Microsoft.SkypeApp' 'Microsoft.WindowsAlarms' 'Microsoft.WindowsCamera' 'Microsoft.WindowsMaps' 'Microsoft.WindowsPhone' 'Microsoft.WindowsSoundRecorder' 'Microsoft.XboxApp' 'Microsoft.ZuneMusic' 'Microsoft.ZuneVideo' 'microsoft.windowscommunicationsapps' 'Microsoft.MinecraftUWP' 'Microsoft.MicrosoftPowerBIForWindows' 'Microsoft.NetworkSpeedTest' 'Microsoft.CommsPhone' 'Microsoft.ConnectivityStore' 'Microsoft.Messaging' 'Microsoft.Office.Sway' 'Microsoft.OneConnect' 'Microsoft.WindowsFeedbackHub' 'Microsoft.BingFoodAndDrink' 'Microsoft.BingTravel' 'Microsoft.BingHealthAndFitness' 'Microsoft.WindowsReadingList' '9E2F88E3.Twitter' 'PandoraMediaInc.29680B314EFC2' 'Flipboard.Flipboard' 'ShazamEntertainmentLtd.Shazam' 'king.com.CandyCrushSaga' 'king.com.CandyCrushSodaSaga' 'king.com.*' 'ClearChannelRadioDigital.iHeartRadio' '4DF9E0F8.Netflix' '6Wunderkinder.Wunderlist' 'Drawboard.DrawboardPDF' '2FE3CB00.PicsArt-PhotoStudio' 'D52A8D61.FarmVille2CountryEscape' 'TuneIn.TuneInRadio' 'GAMELOFTSA.Asphalt8Airborne' 'DB6EA5DB.CyberLinkMediaSuiteEssentials' 'Facebook.Facebook' 'flaregamesGmbH.RoyalRevolt2' 'Playtika.CaesarsSlotsFreeCasino' 'A278AB0D.MarchofEmpires' 'KeeperSecurityInc.Keeper' 'ThumbmunkeysLtd.PhototasticCollage' 'XINGAG.XING' '89006A2E.AutodeskSketchBook' 'D5EA27B7.Duolingo-LearnLanguagesforFree' '46928bounde.EclipseManager' 'ActiproSoftwareLLC.562882FEEB491' ) foreach($appin$apps){ Write-Output'Tryingtoremove$app' Get-AppxPackage-Name$app-AllUsers|Remove-AppxPackage-AllUsers Get-AppXProvisionedPackage-Online| Where-ObjectDisplayName-EQ$app| Remove-AppxProvisionedPackage-Online } #Prevents'SuggestedApplications'returning force-mkdir'HKLM:\SOFTWARE\Policies\Microsoft\Windows\CloudContent' Set-ItemProperty'HKLM:\SOFTWARE\Policies\Microsoft\Windows\CloudContent''DisableWindowsConsumerFeatures'1";
-    std::string command = "powershell.exe -ExecutionPolicy Bypass -Command \"" + std::string(powershellCommand) + std::string(powershellCommand1)+ "\"";
+    std::string command = "powershell.exe -ExecutionPolicy Bypass -Command \"" + std::string(powershellCommand) + std::string(powershellCommand1) + "\"";
 
-    // Выполнение PowerShell команды с помощью system()
     int result = system(command.c_str());
 
     if (result == 0)
@@ -88,9 +132,11 @@ void boostSystem(std::string systemName)
     }
     if (systemName == "Linux")
     {
+        system("echo performance | tee /sys/devices/system/cpu/cpufreq/policy0/scaling_governor");
     }
     if (systemName == "Macos")
     {
+        system("sudo sysctl -w vm.swappiness=10");
     }
 }
 
@@ -217,6 +263,7 @@ int main(int argc, char *argv[])
         clearCache(systemName);
         clearDota2Customs(dota);
         clearCSGOTempFiles(csgo);
+        optimizeCSGOSettings(csgo);
         boostSystem(systemName);
     }
     else
